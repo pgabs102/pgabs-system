@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>PGABS Profile System</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a, #1e3a8a);
+      padding: 20px;
+    }
+
+    /* ================= LOGIN ================= */
+
+    #loginPage {
+      min-height: 90vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 380px;
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+
+    .login-box h1 {
+      text-align: center;
+      margin-bottom: 5px;
+      color: #1e3a8a;
+    }
+
+    .login-box p {
+      text-align: center;
+      color: #64748b;
+      margin-bottom: 25px;
+    }
+
+    .login-box input {
+      width: 100%;
+      padding: 13px;
+      margin-bottom: 15px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      outline: none;
+      font-size: 15px;
+    }
+
+    .login-box input:focus {
+      border-color: #2563eb;
+    }
+
+    #loginButton {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 10px;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #loginButton:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    #loginMessage {
+      text-align: center;
+      margin-top: 15px;
+      min-height: 20px;
+      font-size: 14px;
+    }
+
+    /* LOADING */
+
+    #loadingBox {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .loading-text {
+      text-align: center;
+      font-size: 14px;
+      color: #475569;
+      margin-bottom: 8px;
+    }
+
+    .loading-bar {
+      width: 100%;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .loading-progress {
+      width: 0%;
+      height: 100%;
+      background: #2563eb;
+      border-radius: 20px;
+      animation: loading 1.5s infinite;
+    }
+
+    @keyframes loading {
+      0% {
+        width: 0%;
+      }
+
+      50% {
+        width: 70%;
+      }
+
+      100% {
+        width: 100%;
+      }
+    }
+
+    /* ================= APP ================= */
+
+    #appPage {
+      display: none;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 25px;
+    }
+
+    .topbar h2 {
+      margin: 0;
+      color: #1e3a8a;
+    }
+
+    .logout {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .form-box {
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+
+    .form-box h3 {
+      margin-top: 0;
+    }
+
+    .form-box input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    .form-box input:focus {
+      border-color: #2563eb;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .save-btn {
+      background: #16a34a;
+      color: white;
+      border: none;
+      padding: 11px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .cancel-btn {
+      display: none;
+      background: #64748b;
+      color: white;
+      border: none;
+      padding: 11px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #message {
+      margin-top: 12px;
+      min-height: 20px;
+    }
+
+    .search {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 700px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid #e2e8f0;
+      padding: 12px;
+      text-align: left;
+    }
+
+    th {
+      background: #1e3a8a;
+      color: white;
+    }
+
+    tr:hover {
+      background: #f8fafc;
+    }
+
+    .edit-btn {
+      background: #f59e0b;
+      color: white;
+      border: none;
+      padding: 7px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+
+    .delete-btn {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 7px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+
+      .container {
+        padding: 15px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+      }
+
+      .topbar h2 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ================= LOGIN PAGE ================= -->
+
+  <div id="loginPage">
+
+    <div class="login-box">
+
+      <h1>PGABS</h1>
+
+      <p>Profile Management System</p>
+
+      <input
+        type="text"
+        id="username"
+        placeholder="Username"
+        autocomplete="off"
+      >
+
+      <input
+        type="password"
+        id="password"
+        placeholder="Password"
+      >
+
+      <button id="loginButton" onclick="login()">
+        Login
+      </button>
+
+      <div id="loadingBox">
+
+        <div class="loading-text">
+          Logging in...
+        </div>
+
+        <div class="loading-bar">
+          <div class="loading-progress"></div>
+        </div>
+
+      </div>
+
+      <div id="loginMessage"></div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ================= APP PAGE ================= -->
+
+  <div id="appPage">
+
+    <div class="container">
+
+      <div class="topbar">
+
+        <h2>PGABS Profile System</h2>
+
+        <button
+          class="logout"
+          onclick="logout()"
+        >
+          Logout
+        </button>
+
+      </div>
+
+
+      <!-- FORM -->
+
+      <div class="form-box">
+
+        <h3 id="formTitle">
+          Add Profile
+        </h3>
+
+        <input
+          type="text"
+          id="name"
+          placeholder="Name"
+        >
+
+        <input
+          type="email"
+          id="email"
+          placeholder="Email"
+        >
+
+        <input
+          type="number"
+          id="age"
+          placeholder="Age"
+        >
+
+        <input
+          type="text"
+          id="address"
+          placeholder="Address"
+        >
+
+        <div class="button-row">
+
+          <button
+            class="save-btn"
+            id="saveButton"
+            onclick="saveProfile()"
+          >
+            Save
+          </button>
+
+          <button
+            class="cancel-btn"
+            id="cancelButton"
+            onclick="cancelEdit()"
+          >
+            Cancel
+          </button>
+
+        </div>
+
+        <div id="message"></div>
+
+      </div>
+
+
+      <!-- SEARCH -->
+
+      <input
+        type="text"
+        id="search"
+        class="search"
+        placeholder="Search profile..."
+        oninput="loadProfiles()"
+      >
+
+
+      <!-- TABLE -->
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Age</th>
+              <th>Address</th>
+              <th>Action</th>
+            </tr>
+
+          </thead>
+
+          <tbody id="profileTable">
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+<script>
+
+  /* ================= SUPABASE ================= */
+
+  const SUPABASE_URL =
+    "https://adojdhrfrquueyxtzbiu.supabase.co";
+
+  const SUPABASE_KEY =
+    "sb_publishable_DTVJI_ernJZP5BBDTKMY0A_rCbHAWzG";
+
+  const supabaseClient =
+    supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+
+  /* ================= LOGIN ================= */
+
+  function login() {
+
+    const username =
+      document.getElementById("username").value.trim();
+
+    const password =
+      document.getElementById("password").value;
+
+    const loginButton =
+      document.getElementById("loginButton");
+
+    const loadingBox =
+      document.getElementById("loadingBox");
+
+    const loginMessage =
+      document.getElementById("loginMessage");
+
+
+    loginMessage.textContent = "";
+
+
+    if (!username || !password) {
+
+      loginMessage.textContent =
+        "Enter username and password.";
+
+      loginMessage.style.color = "red";
+
+      return;
+    }
+
+
+    loginButton.disabled = true;
+
+    loginButton.textContent = "Please wait...";
+
+    loadingBox.style.display = "block";
+
+
+    setTimeout(() => {
+
+      if (
+        username === "pgabs102" &&
+        password === "access101"
+      ) {
+
+        sessionStorage.setItem(
+          "adminLoggedIn",
+          "true"
+        );
+
+        showApp();
+
+      } else {
+
+        loadingBox.style.display = "none";
+
+        loginButton.disabled = false;
+
+        loginButton.textContent = "Login";
+
+        loginMessage.textContent =
+          "Invalid username or password.";
+
+        loginMessage.style.color = "red";
+
+      }
+
+    }, 1500);
+
+  }
+
+
+  /* ================= SHOW APP ================= */
+
+  function showApp() {
+
+    document.getElementById("loginPage")
+      .style.display = "none";
+
+    document.getElementById("appPage")
+      .style.display = "block";
+
+    loadProfiles();
+
+  }
+
+
+  /* ================= LOGOUT ================= */
+
+  function logout() {
+
+    sessionStorage.removeItem(
+      "adminLoggedIn"
+    );
+
+    location.reload();
+
+  }
+
+
+  /* ================= EDIT ID ================= */
+
+  let editid = null;
+
+
+  /* ================= SAVE ================= */
+
+  async function saveProfile() {
+
+    const name =
+      document.getElementById("name")
+        .value.trim();
+
+    const email =
+      document.getElementById("email")
+        .value.trim();
+
+    const age =
+      document.getElementById("age")
+        .value;
+
+    const address =
+      document.getElementById("address")
+        .value.trim();
+
+
+    /* VALIDATION */
+
+    if (!name) {
+
+      showMessage(
+        "Enter name.",
+        false
+      );
+
+      return;
+    }
+
+
+    if (!email) {
+
+      showMessage(
+        "Enter email.",
+        false
+      );
+
+      return;
+    }
+
+
+    if (!age) {
+
+      showMessage(
+        "Enter age.",
+        false
+      );
+
+      return;
+    }
+
+
+    if (!address) {
+
+      showMessage(
+        "Enter address.",
+        false
+      );
+
+      return;
+    }
+
+
+    /* UPDATE */
+
+    if (editid) {
+
+      const { error } =
+        await supabaseClient
+          .from("saveprofiles")
+          .update({
+            name: name,
+            email: email,
+            age: Number(age),
+            address: address
+          })
+          .eq("id", editid);
+
+
+      if (error) {
+
+        showMessage(
+          "Update failed: " +
+          error.message,
+          false
+        );
+
+        return;
+      }
+
+
+      showMessage(
+        "Profile updated successfully.",
+        true
+      );
+
+      cancelEdit();
+
+      loadProfiles();
+
+      return;
+    }
+
+
+    /* INSERT */
+
+    const { error } =
+      await supabaseClient
+        .from("saveprofiles")
+        .insert({
+          name: name,
+          email: email,
+          age: Number(age),
+          address: address
+        });
+
+
+    if (error) {
+
+      showMessage(
+        "Save failed: " +
+        error.message,
+        false
+      );
+
+      return;
+    }
+
+
+    showMessage(
+      "Profile saved successfully.",
+      true
+    );
+
+
+    clearForm();
+
+    loadProfiles();
+
+  }
+
+
+  /* ================= READ ================= */
+
+  async function loadProfiles() {
+
+    const search =
+      document.getElementById("search")
+        .value
+        .toLowerCase()
+        .trim();
+
+
+    const { data, error } =
+      await supabaseClient
+        .from("saveprofiles")
+        .select("*")
+        .order("id");
+
+
+    if (error) {
+
+      console.log(error);
+
+      showMessage(
+        "Load failed: " +
+        error.message,
+        false
+      );
+
+      return;
+    }
+
+
+    const table =
+      document.getElementById("profileTable");
+
+    table.innerHTML = "";
+
+
+    const filteredData =
+      data.filter(profile => {
+
+        return (
+          profile.id.toLowerCase()
+            .includes(search) ||
+
+          profile.name.toLowerCase()
+            .includes(search) ||
+
+          profile.email.toLowerCase()
+            .includes(search) ||
+
+          String(profile.age)
+            .includes(search) ||
+
+          profile.address.toLowerCase()
+            .includes(search)
+        );
+
+      });
+
+
+    filteredData.forEach(profile => {
+
+      const row =
+        document.createElement("tr");
+
+
+      row.innerHTML = `
+
+        <td>${escapeHTML(profile.id)}</td>
+
+        <td>${escapeHTML(profile.name)}</td>
+
+        <td>${escapeHTML(profile.email)}</td>
+
+        <td>${escapeHTML(profile.age)}</td>
+
+        <td>${escapeHTML(profile.address)}</td>
+
+        <td>
+
+          <button
+            class="edit-btn"
+            onclick="editProfile('${profile.id}')"
+          >
+            Edit
+          </button>
+
+          <button
+            class="delete-btn"
+            onclick="deleteProfile('${profile.id}')"
+          >
+            Delete
+          </button>
+
+        </td>
+
+      `;
+
+
+      table.appendChild(row);
+
+    });
+
+  }
+
+
+  /* ================= EDIT ================= */
+
+  async function editProfile(id) {
+
+    const { data, error } =
+      await supabaseClient
+        .from("saveprofiles")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+
+    if (error) {
+
+      showMessage(
+        "Edit failed: " +
+        error.message,
+        false
+      );
+
+      return;
+    }
+
+
+    document.getElementById("name")
+      .value = data.name;
+
+    document.getElementById("email")
+      .value = data.email;
+
+    document.getElementById("age")
+      .value = data.age;
+
+    document.getElementById("address")
+      .value = data.address;
+
+
+    editid = id;
+
+
+    document.getElementById("formTitle")
+      .textContent =
+      "Edit Profile " + id;
+
+
+    document.getElementById("saveButton")
+      .textContent = "Update";
+
+
+    document.getElementById("cancelButton")
+      .style.display = "inline-block";
+
+  }
+
+
+  /* ================= CANCEL EDIT ================= */
+
+  function cancelEdit() {
+
+    editid = null;
+
+    clearForm();
+
+
+    document.getElementById("formTitle")
+      .textContent = "Add Profile";
+
+
+    document.getElementById("saveButton")
+      .textContent = "Save";
+
+
+    document.getElementById("cancelButton")
+      .style.display = "none";
+
+  }
+
+
+  /* ================= DELETE ================= */
+
+  async function deleteProfile(id) {
+
+    const confirmDelete =
+      confirm(
+        "Delete profile " + id + "?"
+      );
+
+
+    if (!confirmDelete) {
+      return;
+    }
+
+
+    const { error } =
+      await supabaseClient
+        .from("saveprofiles")
+        .delete()
+        .eq("id", id);
+
+
+    if (error) {
+
+      showMessage(
+        "Delete failed: " +
+        error.message,
+        false
+      );
+
+      return;
+    }
+
+
+    showMessage(
+      "Profile deleted successfully.",
+      true
+    );
+
+
+    loadProfiles();
+
+  }
+
+
+  /* ================= CLEAR FORM ================= */
+
+  function clearForm() {
+
+    document.getElementById("name")
+      .value = "";
+
+    document.getElementById("email")
+      .value = "";
+
+    document.getElementById("age")
+      .value = "";
+
+    document.getElementById("address")
+      .value = "";
+
+  }
+
+
+  /* ================= MESSAGE ================= */
+
+  function showMessage(
+    text,
+    success = true
+  ) {
+
+    const message =
+      document.getElementById("message");
+
+
+    message.textContent = text;
+
+
+    message.style.color =
+      success
+        ? "green"
+        : "red";
+
+
+    setTimeout(() => {
+
+      message.textContent = "";
+
+    }, 2500);
+
+  }
+
+
+  /* ================= SECURITY ================= */
+
+  function escapeHTML(value) {
+
+    return String(value)
+
+      .replace(/&/g, "&amp;")
+
+      .replace(/</g, "&lt;")
+
+      .replace(/>/g, "&gt;")
+
+      .replace(/"/g, "&quot;")
+
+      .replace(/'/g, "&#039;");
+
+  }
+
+
+  /* ================= AUTO LOGIN ================= */
+
+  if (
+    sessionStorage.getItem(
+      "adminLoggedIn"
+    ) === "true"
+  ) {
+
+    showApp();
+
+  }
+
+</script>
+
+</body>
+</html>
